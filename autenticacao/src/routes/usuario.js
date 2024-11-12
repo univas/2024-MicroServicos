@@ -3,6 +3,7 @@ const usuarioSchema = require("../schemas/usuario")
 const encriptador = require("../services/EncriptadorDeSenhas")
 const {Usuario} = require("../models")
 const jwt = require("jsonwebtoken")
+const Email = require("../services/Email")
 
 router.post('/cadastro', async (req, res) => {
     // extrair os dados
@@ -101,5 +102,36 @@ router.post('/validarToken', async (req, res) => {
 })
 
 // redefinirSenha
+router.post('/redefinirSenha', async(req, res) => {
+    const {email} = req.body
+
+    if(!email){
+        return res.status(403).send({
+            mensagem: "Usuário inválido",
+            sucesso: false
+        })
+    }
+
+    const nova_senha = Math.random().toString(36).slice(-6)
+
+    const usuario = await Usuario.findOne({where: {email:email}})
+
+    if(!usuario){
+        return res.status(404).send()
+    }
+
+    const senha_criptografada = await encriptador.encriptar(nova_senha)
+    await usuario.update({ senha:  senha_criptografada})
+    await usuario.save()
+
+    const conteudo = `<p>Recebemos sua solicitação de nova senha.<br>Senha nova: ${nova_senha}</p>`
+
+    await Email.enviarEmail(email, "Redefinição de senha", conteudo)
+
+    return res.status(200).send({
+        sucesso: true,
+        mensagem: "E-mail de redefinição de senha enviado!"
+    })
+})
 
 module.exports = router
