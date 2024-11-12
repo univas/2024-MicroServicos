@@ -1,0 +1,10 @@
+inicializar projeto
+instalar dependencias
+criar pasta src
+configurar sequelize
+    configurar pastas
+    configurar sqlite
+    gerar models
+    migrar banco
+instalar nodemon
+    configurar
